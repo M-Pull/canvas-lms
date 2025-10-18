@@ -570,7 +570,7 @@ module Types
           # do this shard-id stuff
           course.shard.global_id_for(Integer(course.image_id))
         ).then do |attachment|
-          attachment&.public_download_url(1.week)
+          attachment&.public_download_url(expires_in: 1.week, no_jti: true)
         end
       end
     end
@@ -582,17 +582,25 @@ module Types
       course.sis_course_id
     end
 
-    field :submission_statistics, SubmissionStatisticsType, "Returns submission-related statistics for the current user", null: true
-    def submission_statistics
+    field :submission_statistics, SubmissionStatisticsType, "Returns submission-related statistics for the current user", null: true do
+      argument :observed_user_id, ID, "Optional observed user ID for observer statistics", required: false
+    end
+    def submission_statistics(observed_user_id: nil)
       return nil unless course.grants_right?(current_user, :read)
 
       # Check if current user is an observer with observed students
       observed_students = ObserverEnrollment.observed_students(course, current_user, include_restricted_access: false).keys
+
+      # filter observed_students to only students with observed_user_id if provided
+      if observed_user_id.present?
+        observed_students.select! { |student| student.id.to_s == observed_user_id.to_s }
+      end
+
       is_observer = !observed_students.empty?
 
       if is_observer
         Loaders::ObserverCourseSubmissionDataLoader.for(current_user:, request: context[:request]).load(course)
-      else
+      elsif observed_user_id.nil?
         Loaders::CourseSubmissionDataLoader.for(current_user:).load(course)
       end
     end

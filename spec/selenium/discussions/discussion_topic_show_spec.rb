@@ -712,7 +712,7 @@ describe "Discussion Topic Show" do
       end
 
       it "shows lock indication for discussions locked by discussion's unlock_at date" do
-        skip("EGG-73")
+        skip("EGG-73 2025-07-15")
         Checkpoints::DiscussionCheckpointCreatorService.call(
           discussion_topic: @topic,
           checkpoint_label: CheckpointLabels::REPLY_TO_TOPIC,
@@ -733,7 +733,7 @@ describe "Discussion Topic Show" do
       end
 
       it "shows lock indication for discussions locked by discussion's lock_at date" do
-        skip("EGG-73")
+        skip("EGG-73 2025-07-15")
         @topic.update!(lock_at: 1.day.ago)
         Checkpoints::DiscussionCheckpointCreatorService.call(
           discussion_topic: @topic,
@@ -968,6 +968,32 @@ describe "Discussion Topic Show" do
       entries_after = Discussion.discussion_entries
       first_entry_text_after = entries_after.first.text
       expect(first_entry_text_after).to include("First")
+    end
+  end
+
+  context "nutrition facts functionality" do
+    context "when cedar_translation feature flag is enabled" do
+      before do
+        Account.site_admin.enable_feature!(:cedar_translation)
+      end
+
+      it "loads nutrition facts element with content in the DOM" do
+        get "/courses/#{@course.id}/discussion_topics/#{@topic.id}"
+        wait_for_ajaximations
+        expect(element_exists?("#nutrition_facts_trigger")).to be_truthy
+      end
+    end
+
+    context "when cedar_translation feature flag is disabled" do
+      before do
+        Account.site_admin.disable_feature!(:cedar_translation)
+      end
+
+      it "does not mount nutrition facts content" do
+        get "/courses/#{@course.id}/discussion_topics/#{@topic.id}"
+        wait_for_ajaximations
+        expect(element_exists?("#nutrition_facts_trigger")).to be_falsey
+      end
     end
   end
 end

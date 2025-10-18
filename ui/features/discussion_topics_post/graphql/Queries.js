@@ -75,6 +75,7 @@ export const DISCUSSION_QUERY = gql`
             ...Group
           }
         }
+        ${ENV.discussion_pin_post ? 'pinnedEntries { ...DiscussionEntry }' : ''}
       }
     }
   }
@@ -230,6 +231,28 @@ export const SUBMISSION_BY_ASSIGNMENT_QUERY = gql`
             }
           }
         }
+      }
+    }
+  }
+`
+
+export const GET_PREFERRED_LANGUAGE = gql`
+  query GetPreferredLanguage($discussionTopicId: ID!) {
+    legacyNode(_id: $discussionTopicId, type: Discussion) {
+      ... on Discussion {
+        id
+        _id
+        participant{
+          id
+          preferredLanguage
+        }
+      }
+    }
+    __type(name: "PreferredLanguageType") {
+      name
+      enumValues {
+        name
+        description
       }
     }
   }

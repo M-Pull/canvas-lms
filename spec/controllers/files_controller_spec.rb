@@ -291,14 +291,6 @@ describe FilesController do
       assert_unauthorized
     end
 
-    it "respects user context" do
-      skip("investigate cause for failures beginning 05/05/21 FOO-1950")
-      user_session(@teacher)
-      assert_page_not_found do
-        get "show", params: { user_id: @user.id, id: @file.id }, format: "html"
-      end
-    end
-
     it "doesn't allow an assignment_id to bypass other auth checks" do
       assignment1 = @course.assignments.create!(name: "an assignment")
 
@@ -2439,6 +2431,15 @@ describe FilesController do
               get("image_thumbnail", params: { id: image.id }).location
             end
             expect(locations[0]).not_to eq(locations[1])
+          end
+        end
+
+        it "does not add a jti if the thumbnail is accessed with the avatar location (meaning it's a profile picture)" do
+          enable_cache do
+            user_session @teacher
+            token = get("image_thumbnail", params: { id: image.id, no_cache: true, location: "avatar_#{@teacher.id}" }).location.split("?token=")[1]
+            claims = Canvas::Security.decode_jwt(token, [InstFS.jwt_secret])
+            expect(claims["jti"]).not_to be_present
           end
         end
 
