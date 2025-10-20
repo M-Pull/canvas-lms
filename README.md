@@ -130,6 +130,14 @@ sysadmin@appserver:/var/canvas$ yarn gulp rev
 sysadmin@appserver:/var/canvas$ RAILS_ENV=production bundle exec rake db:initial_setup
 ```
 
+Dynamic settings configuration
+=======
+
+```
+sysadmin@appserver:/var/canvas$ cp config/dynamic_settings.yml.example config/dynamic_settings.yml
+sysadmin@appserver:/var/canvas$ nano config/dynamic_settings.yml
+```
+
 Generate Assets
 =======
 ```
